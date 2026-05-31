@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laptop Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💻 Laptop Inventory</h1>
+            <a href="{{ url_for('add') }}" class="btn primary">Add New Laptop</a>
+        </header>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alerts">
+              {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <main>
+            <table>
+                <thead>
+                    <tr>
+                        <th>S/N</th>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Chip</th>
+                        <th>Warranty</th>
+                        <th>Cost (THB)</th>
+                        <th>Screen</th>
+                        <th>RAM/ROM</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for laptop in laptops %}
+                    <tr>
+                        <td>{{ laptop['SerialNumber'] }}</td>
+                        <td>{{ laptop['Brand'] }}</td>
+                        <td>{{ laptop['Model'] }}</td>
+                        <td>{{ laptop['Chip'] }}</td>
+                        <td>{{ laptop['Warranty'] }}</td>
+                        <td>{{ "{:,.0f}".format(laptop['Cost']) }}</td>
+                        <td>{{ laptop['ScreenSize'] }}"</td>
+                        <td>{{ laptop['RamRom'] }}</td>
+                        <td>
+                            <a href="{{ url_for('edit', sn=laptop['SerialNumber']) }}" class="btn edit">Edit</a>
+                            <a href="{{ url_for('delete', sn=laptop['SerialNumber']) }}" class="btn delete" onclick="return confirm('Delete this laptop?')">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>
+</html>

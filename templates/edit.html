@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Laptop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container form-container">
+        <h1>Edit Laptop: {{ laptop['SerialNumber'] }}</h1>
+        <form method="post">
+            <div class="form-group">
+                <label>Brand</label>
+                <input type="text" name="brand" value="{{ laptop['Brand'] }}">
+            </div>
+            <div class="form-group">
+                <label>Model</label>
+                <input type="text" name="model" value="{{ laptop['Model'] }}">
+            </div>
+            <div class="form-group">
+                <label>Chip</label>
+                <input type="text" name="chip" value="{{ laptop['Chip'] }}">
+            </div>
+            <div class="form-group">
+                <label>Warranty</label>
+                <input type="text" name="warranty" value="{{ laptop['Warranty'] }}">
+            </div>
+            <div class="form-group">
+                <label>Cost (THB)</label>
+                <input type="number" name="cost" value="{{ laptop['Cost'] }}">
+            </div>
+            <div class="form-group">
+                <label>Screen Size</label>
+                <input type="number" step="0.1" name="screen" value="{{ laptop['ScreenSize'] }}">
+            </div>
+            <div class="form-group">
+                <label>RAM/ROM</label>
+                <input type="text" name="ramrom" value="{{ laptop['RamRom'] }}">
+            </div>
+            <button type="submit" class="btn primary">Update Laptop</button>
+            <a href="{{ url_for('index') }}" class="btn secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

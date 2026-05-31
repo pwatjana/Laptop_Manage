@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Laptop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container form-container">
+        <h1>Add New Laptop</h1>
+        <form method="post">
+            <div class="form-group">
+                <label>Serial Number</label>
+                <input type="text" name="sn" required>
+            </div>
+            <div class="form-group">
+                <label>Brand</label>
+                <input type="text" name="brand">
+            </div>
+            <div class="form-group">
+                <label>Model</label>
+                <input type="text" name="model">
+            </div>
+            <div class="form-group">
+                <label>Chip</label>
+                <input type="text" name="chip">
+            </div>
+            <div class="form-group">
+                <label>Warranty</label>
+                <input type="text" name="warranty">
+            </div>
+            <div class="form-group">
+                <label>Cost (THB)</label>
+                <input type="number" name="cost">
+            </div>
+            <div class="form-group">
+                <label>Screen Size</label>
+                <input type="number" step="0.1" name="screen">
+            </div>
+            <div class="form-group">
+                <label>RAM/ROM</label>
+                <input type="text" name="ramrom">
+            </div>
+            <button type="submit" class="btn primary">Save Laptop</button>
+            <a href="{{ url_for('index') }}" class="btn secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
