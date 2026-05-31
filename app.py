@@ -49,6 +49,7 @@ def add_laptop():
             "Brand": request.form['brand'],
             "Model": request.form['model'],
             "Chip": request.form['chip'],
+            "Status": request.form['status'],
             "Warranty": request.form['warranty'],
             "Cost": float(request.form['cost']) if request.form['cost'] else 0,
             "ScreenSize": float(request.form['screen']) if request.form['screen'] else 0,
@@ -68,6 +69,7 @@ def edit_laptop(sn):
     if request.method == 'POST':
         data = {
             "Brand": request.form['brand'], "Model": request.form['model'], "Chip": request.form['chip'],
+            "Status": request.form['status'],
             "Warranty": request.form['warranty'], "Cost": float(request.form['cost']),
             "ScreenSize": float(request.form['screen']), "RamRom": request.form['ramrom']
         }

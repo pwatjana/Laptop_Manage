@@ -22,6 +22,15 @@
                 <input type="text" name="chip" value="{{ laptop['Chip'] }}">
             </div>
             <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="Available" {% if laptop['Status'] == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Assigned" {% if laptop['Status'] == 'Assigned' %}selected{% endif %}>Assigned</option>
+                    <option value="Repair" {% if laptop['Status'] == 'Repair' %}selected{% endif %}>Repair</option>
+                    <option value="Lost" {% if laptop['Status'] == 'Lost' %}selected{% endif %}>Lost</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Warranty</label>
                 <input type="text" name="warranty" value="{{ laptop['Warranty'] }}">
             </div>
