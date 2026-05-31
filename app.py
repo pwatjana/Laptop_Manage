@@ -13,18 +13,26 @@ app.secret_key = "secret_laptop_key"
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 
-if not url or not key:
-    print("Error: SUPABASE_URL or SUPABASE_KEY is missing from environment variables.")
-    # You can also use a fallback for local testing if needed, 
-    # but for Render it must be set in the dashboard.
-    
-supabase: Client = create_client(url, key) if url and key else None
+try:
+    if not url or not key:
+        print("Error: SUPABASE_URL or SUPABASE_KEY is missing.")
+        supabase = None
+    else:
+        supabase: Client = create_client(url, key)
+except Exception as e:
+    print(f"Error initializing Supabase: {e}")
+    supabase = None
 
 @app.route('/')
 def index():
-    response = supabase.table('laptops').select("*").execute()
-    laptops = response.data
-    return render_template('index.html', laptops=laptops)
+    if not supabase:
+        return "Database not configured. Please check your environment variables.", 500
+    try:
+        response = supabase.table('laptops').select("*").execute()
+        laptops = response.data
+        return render_template('index.html', laptops=laptops)
+    except Exception as e:
+        return f"Error fetching data: {str(e)}", 500
 
 @app.route('/add', methods=('GET', 'POST'))
 def add():
