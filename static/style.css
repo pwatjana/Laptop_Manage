@@ -107,6 +107,11 @@ tr:hover { background-color: #f8fafc; }
     margin-bottom: 10px;
 }
 
+.hp-field {
+    display: none !important;
+    visibility: hidden;
+}
+
 /* Dashboard Grid */
 .dashboard-grid {
     display: grid;

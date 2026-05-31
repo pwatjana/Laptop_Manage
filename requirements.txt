@@ -2,3 +2,6 @@ flask
 supabase
 python-dotenv
 gunicorn
+flask-wtf
+flask-talisman
+bleach
