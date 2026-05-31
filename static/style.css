@@ -73,6 +73,19 @@ tr:hover { background-color: #f8fafc; }
 .edit { background: var(--edit); color: white; }
 .delete { background: var(--danger); color: white; margin-left: 5px; }
 
+/* Status Badges */
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.available { background: #dcfce7; color: #166534; }
+.assigned { background: #dbeafe; color: #1e40af; }
+.repair { background: #fef3c7; color: #92400e; }
+.lost { background: #fee2e2; color: #991b1b; }
+
 .form-container { max-width: 600px; }
 
 .form-group { margin-bottom: 15px; }

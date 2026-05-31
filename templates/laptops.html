@@ -16,7 +16,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>S/N</th><th>Brand</th><th>Model</th><th>Chip</th><th>Warranty</th><th>Cost</th><th>Screen</th><th>RAM/ROM</th><th>Actions</th>
+                    <th>S/N</th><th>Brand</th><th>Model</th><th>Status</th><th>Chip</th><th>Warranty</th><th>Cost</th><th>Screen</th><th>RAM/ROM</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,6 +25,7 @@
                     <td>{{ laptop['SerialNumber'] }}</td>
                     <td>{{ laptop['Brand'] }}</td>
                     <td>{{ laptop['Model'] }}</td>
+                    <td><span class="badge {{ laptop['Status']|lower }}">{{ laptop['Status'] or 'N/A' }}</span></td>
                     <td>{{ laptop['Chip'] }}</td>
                     <td>{{ laptop['Warranty'] }}</td>
                     <td>{{ "{:,.0f}".format(laptop['Cost']) }}</td>
