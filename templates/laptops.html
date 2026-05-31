@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Laptops Inventory</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="{{ url_for('index') }}" class="btn secondary">← Back to Dashboard</a>
+            <h1>💻 Laptop Inventory</h1>
+            <a href="{{ url_for('add_laptop') }}" class="btn primary">Add New Laptop</a>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S/N</th><th>Brand</th><th>Model</th><th>Chip</th><th>Warranty</th><th>Cost</th><th>Screen</th><th>RAM/ROM</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for laptop in laptops %}
+                <tr>
+                    <td>{{ laptop['SerialNumber'] }}</td>
+                    <td>{{ laptop['Brand'] }}</td>
+                    <td>{{ laptop['Model'] }}</td>
+                    <td>{{ laptop['Chip'] }}</td>
+                    <td>{{ laptop['Warranty'] }}</td>
+                    <td>{{ "{:,.0f}".format(laptop['Cost']) }}</td>
+                    <td>{{ laptop['ScreenSize'] }}"</td>
+                    <td>{{ laptop['RamRom'] }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_laptop', sn=laptop['SerialNumber']) }}" class="btn edit">Edit</a>
+                        <a href="{{ url_for('delete_laptop', sn=laptop['SerialNumber']) }}" class="btn delete" onclick="return confirm('Delete?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
