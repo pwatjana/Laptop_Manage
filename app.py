@@ -1,13 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask_wtf.csrf import CSRFProtect
+from flask_talisman import Talisman
 from supabase import create_client, Client
 import os
+import bleach
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "secret_laptop_key"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "highly_secure_random_string_123")
+
+# Security 1: CSRF Protection
+csrf = CSRFProtect(app)
+
+# Security 2: Security Headers (CSP, HSTS, etc.)
+# We allow inline styles for our demo, but in production, move CSS to files.
+talisman = Talisman(app, content_security_policy={
+    'default-src': '\'self\'',
+    'style-src': ['\'self\'', '\'unsafe-inline\'']
+})
 
 # Supabase configuration
 url: str = os.environ.get("SUPABASE_URL")
@@ -22,6 +35,19 @@ try:
 except Exception as e:
     print(f"Error initializing Supabase: {e}")
     supabase = None
+
+def sanitize(data):
+    """XSS Protection: Sanitize user input."""
+    if isinstance(data, str):
+        return bleach.clean(data)
+    return data
+
+def check_honeypot():
+    """Honeypot Protection: Detect bots."""
+    if request.form.get('website_url'):
+        # If the hidden field is filled, it's likely a bot
+        print("Honeypot triggered! Request rejected.")
+        abort(400)
 
 @app.route('/')
 def index():
@@ -44,16 +70,17 @@ def list_laptops():
 @app.route('/laptops/add', methods=('GET', 'POST'))
 def add_laptop():
     if request.method == 'POST':
+        check_honeypot()
         data = {
-            "SerialNumber": request.form['sn'],
-            "Brand": request.form['brand'],
-            "Model": request.form['model'],
-            "Chip": request.form['chip'],
-            "Status": request.form['status'],
-            "Warranty": request.form['warranty'],
+            "SerialNumber": sanitize(request.form['sn']),
+            "Brand": sanitize(request.form['brand']),
+            "Model": sanitize(request.form['model']),
+            "Chip": sanitize(request.form['chip']),
+            "Status": sanitize(request.form['status']),
+            "Warranty": sanitize(request.form['warranty']),
             "Cost": float(request.form['cost']) if request.form['cost'] else 0,
             "ScreenSize": float(request.form['screen']) if request.form['screen'] else 0,
-            "RamRom": request.form['ramrom']
+            "RamRom": sanitize(request.form['ramrom'])
         }
         try:
             supabase.table('laptops').insert(data).execute()
@@ -67,11 +94,16 @@ def edit_laptop(sn):
     response = supabase.table('laptops').select("*").eq("SerialNumber", sn).execute()
     laptop = response.data[0] if response.data else None
     if request.method == 'POST':
+        check_honeypot()
         data = {
-            "Brand": request.form['brand'], "Model": request.form['model'], "Chip": request.form['chip'],
-            "Status": request.form['status'],
-            "Warranty": request.form['warranty'], "Cost": float(request.form['cost']),
-            "ScreenSize": float(request.form['screen']), "RamRom": request.form['ramrom']
+            "Brand": sanitize(request.form['brand']), 
+            "Model": sanitize(request.form['model']), 
+            "Chip": sanitize(request.form['chip']),
+            "Status": sanitize(request.form['status']),
+            "Warranty": sanitize(request.form['warranty']), 
+            "Cost": float(request.form['cost']),
+            "ScreenSize": float(request.form['screen']), 
+            "RamRom": sanitize(request.form['ramrom'])
         }
         supabase.table('laptops').update(data).eq("SerialNumber", sn).execute()
         return redirect(url_for('list_laptops'))
@@ -93,15 +125,16 @@ def list_employees():
 def add_employee():
     laptops = supabase.table('laptops').select("SerialNumber, Brand, Model").execute().data
     if request.method == 'POST':
+        check_honeypot()
         data = {
-            "EmployeeCode": request.form['code'],
-            "FullName": request.form['name'],
-            "SectionCode": request.form['section_code'],
-            "SectionName": request.form['section_name'],
-            "LaptopSN": request.form['laptop_sn'] if request.form['laptop_sn'] != "" else None,
+            "EmployeeCode": sanitize(request.form['code']),
+            "FullName": sanitize(request.form['name']),
+            "SectionCode": sanitize(request.form['section_code']),
+            "SectionName": sanitize(request.form['section_name']),
+            "LaptopSN": sanitize(request.form['laptop_sn']) if request.form['laptop_sn'] != "" else None,
             "JoinDate": request.form['join_date'] if request.form['join_date'] else None,
             "LastDate": request.form['last_date'] if request.form['last_date'] else None,
-            "Remark": request.form['remark']
+            "Remark": sanitize(request.form['remark'])
         }
         try:
             supabase.table('employees').insert(data).execute()
@@ -116,11 +149,15 @@ def edit_employee(code):
     response = supabase.table('employees').select("*").eq("EmployeeCode", code).execute()
     emp = response.data[0] if response.data else None
     if request.method == 'POST':
+        check_honeypot()
         data = {
-            "FullName": request.form['name'], "SectionCode": request.form['section_code'],
-            "SectionName": request.form['section_name'], "LaptopSN": request.form['laptop_sn'] or None,
-            "JoinDate": request.form['join_date'] or None, "LastDate": request.form['last_date'] or None,
-            "Remark": request.form['remark']
+            "FullName": sanitize(request.form['name']), 
+            "SectionCode": sanitize(request.form['section_code']),
+            "SectionName": sanitize(request.form['section_name']), 
+            "LaptopSN": sanitize(request.form['laptop_sn']) or None,
+            "JoinDate": request.form['join_date'] or None, 
+            "LastDate": request.form['last_date'] or None,
+            "Remark": sanitize(request.form['remark'])
         }
         supabase.table('employees').update(data).eq("EmployeeCode", code).execute()
         return redirect(url_for('list_employees'))

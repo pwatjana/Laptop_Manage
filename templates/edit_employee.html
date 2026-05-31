@@ -9,6 +9,9 @@
     <div class="container form-container">
         <h1>Edit Employee: {{ employee['EmployeeCode'] }}</h1>
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="hp-field"><input type="text" name="website_url"></div>
+
             <div class="form-group"><label>Full Name</label><input type="text" name="name" value="{{ employee['FullName'] }}" required></div>
             <div class="form-group"><label>Section Code</label><input type="text" name="section_code" value="{{ employee['SectionCode'] }}"></div>
             <div class="form-group"><label>Section Name</label><input type="text" name="section_name" value="{{ employee['SectionName'] }}"></div>
