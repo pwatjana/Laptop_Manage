@@ -12,7 +12,13 @@ app.secret_key = "secret_laptop_key"
 # Supabase configuration
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+
+if not url or not key:
+    print("Error: SUPABASE_URL or SUPABASE_KEY is missing from environment variables.")
+    # You can also use a fallback for local testing if needed, 
+    # but for Render it must be set in the dashboard.
+    
+supabase: Client = create_client(url, key) if url and key else None
 
 @app.route('/')
 def index():
