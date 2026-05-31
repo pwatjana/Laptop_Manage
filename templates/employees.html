@@ -16,7 +16,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Code</th><th>Full Name</th><th>Section</th><th>Assigned Laptop</th><th>Join Date</th><th>Remark</th><th>Actions</th>
+                    <th>Code</th><th>Full Name</th><th>Section</th><th>Join Date</th><th>Remark</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,7 +25,6 @@
                     <td>{{ emp['EmployeeCode'] }}</td>
                     <td>{{ emp['FullName'] }}</td>
                     <td>{{ emp['SectionName'] }} ({{ emp['SectionCode'] }})</td>
-                    <td><strong>{{ emp['LaptopSN'] or 'Not Assigned' }}</strong></td>
                     <td>{{ emp['JoinDate'] }}</td>
                     <td>{{ emp['Remark'] }}</td>
                     <td>

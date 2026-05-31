@@ -123,7 +123,6 @@ def list_employees():
 
 @app.route('/employees/add', methods=('GET', 'POST'))
 def add_employee():
-    laptops = supabase.table('laptops').select("SerialNumber, Brand, Model").execute().data
     if request.method == 'POST':
         check_honeypot()
         data = {
@@ -131,7 +130,6 @@ def add_employee():
             "FullName": sanitize(request.form['name']),
             "SectionCode": sanitize(request.form['section_code']),
             "SectionName": sanitize(request.form['section_name']),
-            "LaptopSN": sanitize(request.form['laptop_sn']) if request.form['laptop_sn'] != "" else None,
             "JoinDate": request.form['join_date'] if request.form['join_date'] else None,
             "LastDate": request.form['last_date'] if request.form['last_date'] else None,
             "Remark": sanitize(request.form['remark'])
@@ -141,11 +139,10 @@ def add_employee():
             return redirect(url_for('list_employees'))
         except Exception as e:
             flash(f'Error: {str(e)}')
-    return render_template('add_employee.html', laptops=laptops)
+    return render_template('add_employee.html')
 
 @app.route('/employees/edit/<code>', methods=('GET', 'POST'))
 def edit_employee(code):
-    laptops = supabase.table('laptops').select("SerialNumber, Brand, Model").execute().data
     response = supabase.table('employees').select("*").eq("EmployeeCode", code).execute()
     emp = response.data[0] if response.data else None
     if request.method == 'POST':
@@ -154,14 +151,13 @@ def edit_employee(code):
             "FullName": sanitize(request.form['name']), 
             "SectionCode": sanitize(request.form['section_code']),
             "SectionName": sanitize(request.form['section_name']), 
-            "LaptopSN": sanitize(request.form['laptop_sn']) or None,
             "JoinDate": request.form['join_date'] or None, 
             "LastDate": request.form['last_date'] or None,
             "Remark": sanitize(request.form['remark'])
         }
         supabase.table('employees').update(data).eq("EmployeeCode", code).execute()
         return redirect(url_for('list_employees'))
-    return render_template('edit_employee.html', employee=emp, laptops=laptops)
+    return render_template('edit_employee.html', employee=emp)
 
 @app.route('/employees/delete/<code>')
 def delete_employee(code):

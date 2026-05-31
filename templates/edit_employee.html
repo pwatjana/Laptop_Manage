@@ -15,17 +15,6 @@
             <div class="form-group"><label>Full Name</label><input type="text" name="name" value="{{ employee['FullName'] }}" required></div>
             <div class="form-group"><label>Section Code</label><input type="text" name="section_code" value="{{ employee['SectionCode'] }}"></div>
             <div class="form-group"><label>Section Name</label><input type="text" name="section_name" value="{{ employee['SectionName'] }}"></div>
-            <div class="form-group">
-                <label>Assign Laptop</label>
-                <select name="laptop_sn">
-                    <option value="">-- No Laptop Assigned --</option>
-                    {% for laptop in laptops %}
-                    <option value="{{ laptop['SerialNumber'] }}" {% if laptop['SerialNumber'] == employee['LaptopSN'] %}selected{% endif %}>
-                        {{ laptop['SerialNumber'] }} - {{ laptop['Brand'] }} {{ laptop['Model'] }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
             <div class="form-group"><label>Join Date</label><input type="date" name="join_date" value="{{ employee['JoinDate'] }}"></div>
             <div class="form-group"><label>Last Date</label><input type="date" name="last_date" value="{{ employee['LastDate'] }}"></div>
             <div class="form-group"><label>Remark</label><textarea name="remark">{{ employee['Remark'] }}</textarea></div>
