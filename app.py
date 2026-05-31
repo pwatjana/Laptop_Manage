@@ -1,80 +1,74 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import sqlite3
+from supabase import create_client, Client
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "secret_laptop_key"
-DB_PATH = os.path.join(os.path.dirname(__file__), 'laptop_db.db')
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+# Supabase configuration
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
 @app.route('/')
 def index():
-    conn = get_db_connection()
-    laptops = conn.execute('SELECT * FROM laptops').fetchall()
-    conn.close()
+    response = supabase.table('laptops').select("*").execute()
+    laptops = response.data
     return render_template('index.html', laptops=laptops)
 
 @app.route('/add', methods=('GET', 'POST'))
 def add():
     if request.method == 'POST':
         sn = request.form['sn']
-        brand = request.form['brand']
-        model = request.form['model']
-        chip = request.form['chip']
-        warranty = request.form['warranty']
-        cost = request.form['cost']
-        screen = request.form['screen']
-        ramrom = request.form['ramrom']
+        data = {
+            "SerialNumber": sn,
+            "Brand": request.form['brand'],
+            "Model": request.form['model'],
+            "Chip": request.form['chip'],
+            "Warranty": request.form['warranty'],
+            "Cost": float(request.form['cost']) if request.form['cost'] else 0,
+            "ScreenSize": float(request.form['screen']) if request.form['screen'] else 0,
+            "RamRom": request.form['ramrom']
+        }
 
         if not sn:
             flash('Serial Number is required!')
         else:
-            conn = get_db_connection()
             try:
-                conn.execute('INSERT INTO laptops VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                             (sn, brand, model, chip, warranty, cost, screen, ramrom))
-                conn.commit()
-                conn.close()
+                supabase.table('laptops').insert(data).execute()
                 return redirect(url_for('index'))
-            except sqlite3.IntegrityError:
-                flash('Serial Number already exists!')
-                conn.close()
+            except Exception as e:
+                flash(f'Error: {str(e)}')
 
     return render_template('add.html')
 
 @app.route('/edit/<sn>', methods=('GET', 'POST'))
 def edit(sn):
-    conn = get_db_connection()
-    laptop = conn.execute('SELECT * FROM laptops WHERE SerialNumber = ?', (sn,)).fetchone()
+    response = supabase.table('laptops').select("*").eq("SerialNumber", sn).execute()
+    laptop = response.data[0] if response.data else None
 
     if request.method == 'POST':
-        brand = request.form['brand']
-        model = request.form['model']
-        chip = request.form['chip']
-        warranty = request.form['warranty']
-        cost = request.form['cost']
-        screen = request.form['screen']
-        ramrom = request.form['ramrom']
-
-        conn.execute('UPDATE laptops SET Brand=?, Model=?, Chip=?, Warranty=?, Cost=?, ScreenSize=?, RamRom=? WHERE SerialNumber=?',
-                     (brand, model, chip, warranty, cost, screen, ramrom, sn))
-        conn.commit()
-        conn.close()
+        data = {
+            "Brand": request.form['brand'],
+            "Model": request.form['model'],
+            "Chip": request.form['chip'],
+            "Warranty": request.form['warranty'],
+            "Cost": float(request.form['cost']) if request.form['cost'] else 0,
+            "ScreenSize": float(request.form['screen']) if request.form['screen'] else 0,
+            "RamRom": request.form['ramrom']
+        }
+        supabase.table('laptops').update(data).eq("SerialNumber", sn).execute()
         return redirect(url_for('index'))
 
-    conn.close()
     return render_template('edit.html', laptop=laptop)
 
 @app.route('/delete/<sn>')
 def delete(sn):
-    conn = get_db_connection()
-    conn.execute('DELETE FROM laptops WHERE SerialNumber = ?', (sn,))
-    conn.commit()
-    conn.close()
+    supabase.table('laptops').delete().eq("SerialNumber", sn).execute()
     flash(f'Laptop {sn} deleted successfully.')
     return redirect(url_for('index'))
 
