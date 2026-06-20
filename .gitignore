@@ -1,2 +1,17 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Environment / Secrets — NEVER commit these
+.env
+.env.*
+
+# Local SQLite fallback database
+laptop_db.db
+
+# Editor / OS artefacts
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
