@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}Report Damage Incident - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Report Damage Incident</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">File a new damage claim or maintenance repair ticket</p>
+    </div>
+    <a href="{{ url_for('list_damage_issues') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Tickets
+    </a>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('add_damage_issue') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <!-- Honeypot Field -->
+        <div class="hp-field">
+            <label for="website_url">Do not fill this field:</label>
+            <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="sn">Select Damaged Laptop (S/N) *</label>
+                <select id="sn" name="sn" required>
+                    <option value="" disabled selected>-- Choose Laptop --</option>
+                    {% for laptop in laptops %}
+                        <option value="{{ laptop.Laptop_SN_no }}">
+                            {{ laptop.Laptop_SN_no }} - {{ laptop.Laptop_Brand }} (Status: {{ laptop.Status }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="employee_code">Reported By Employee (Optional)</label>
+                <select id="employee_code" name="employee_code">
+                    <option value="" selected>-- Not assigned / In stock --</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.Employee_code }}">
+                            {{ emp.Employee_code }} - {{ emp.Employee_full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="reported_date">Report Date *</label>
+                <input type="date" id="reported_date" name="reported_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="severity">Severity Level *</label>
+                <select id="severity" name="severity" required>
+                    <option value="Low" selected>Low (Scratches, minor wear)</option>
+                    <option value="Medium">Medium (Key replacement, battery issues)</option>
+                    <option value="High">High (Cracked screen, keyboard non-responsive)</option>
+                    <option value="Critical">Critical (Motherboard dead, liquid spill, wont boot)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Ticket Status *</label>
+                <select id="status" name="status" required>
+                    <option value="Open" selected>Open (Pending Diagnostic)</option>
+                    <option value="In Repair">In Repair (Sent to Center)</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Scrapped">Scrapped / Written Off</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cost">Estimated/Actual Repair Cost (THB)</label>
+                <input type="number" id="cost" name="cost" step="0.01" placeholder="e.g. 3500.00" min="0">
+            </div>
+
+            <div class="form-group full-width">
+                <label for="description">Damage Description *</label>
+                <textarea id="description" name="description" required placeholder="Describe the physical damage or hardware failure issue in detail..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="action_taken">Actions Taken (Resolution Notes)</label>
+                <input type="text" id="action_taken" name="action_taken" placeholder="e.g. Sent to Apple Care service center" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="resolution_date">Resolution Date (If Resolved)</label>
+                <input type="date" id="resolution_date" name="resolution_date">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-save"></i> Save Ticket
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Set default date to today
+    document.getElementById('reported_date').valueAsDate = new Date();
+</script>
+{% endblock %}

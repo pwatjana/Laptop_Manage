@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block title %}Damage & Repair Incidents - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Damage & Repair Tickets</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Log hardware failures, liquid spills, cracked screens, and repair costs</p>
+    </div>
+    {% if current_user %}
+        <a href="{{ url_for('add_damage_issue') }}" class="btn btn-primary">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Report Damage Incident
+        </a>
+    {% endif %}
+</div>
+
+<div class="table-wrapper">
+    {% if issues %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Laptop S/N</th>
+                <th>Reported By</th>
+                <th>Reported Date</th>
+                <th>Description</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Cost</th>
+                <th>Resolution Details</th>
+                {% if current_user %}
+                    <th style="text-align: right;">Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for issue in issues %}
+            <tr>
+                <td><code style="color: var(--text-muted);">#{{ issue.IssueId }}</code></td>
+                <td>
+                    <strong>{{ issue.SerialNumber }}</strong>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary)">{{ issue.Laptop_Brand }}</div>
+                </td>
+                <td>
+                    {% if issue.EmployeeCode %}
+                        <strong>{{ issue.Employee_full_name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary)">Code: {{ issue.EmployeeCode }}</div>
+                    {% else %}
+                        <span style="color: var(--text-muted);">Inventory Pool</span>
+                    {% endif %}
+                </td>
+                <td>{{ issue.ReportedDate }}</td>
+                <td style="max-width: 200px; word-wrap: break-word;">{{ issue.Description }}</td>
+                <td>
+                    <span class="badge {{ issue.Severity|lower }}">
+                        {{ issue.Severity }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {{ issue.Status|lower|replace(' ', '_') }}">
+                        {{ issue.Status }}
+                    </span>
+                </td>
+                <td>
+                    {% if issue.Cost %}
+                        <strong>฿{{ "{:,.2f}".format(issue.Cost) }}</strong>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">฿0.00</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if issue.Status == 'Resolved' %}
+                        <div style="color: var(--success); font-weight: 500;"><i class="fa-solid fa-circle-check"></i> Resolved</div>
+                        {% if issue.ResolutionDate %}
+                            <div style="font-size: 0.75rem; color: var(--text-secondary)">Date: {{ issue.ResolutionDate }}</div>
+                        {% endif %}
+                    {% elif issue.Status == 'In Repair' %}
+                        <div style="color: var(--warning);"><i class="fa-solid fa-screwdriver-wrench"></i> In Service Center</div>
+                    {% elif issue.Status == 'Scrapped' %}
+                        <div style="color: var(--danger);"><i class="fa-solid fa-trash-can"></i> Scrapped / Written-off</div>
+                    {% else %}
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">Pending Diagnostic</div>
+                    {% endif %}
+                    {% if issue.ActionTaken %}
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; font-style: italic;">"{{ issue.ActionTaken }}"</div>
+                    {% endif %}
+                </td>
+                {% if current_user %}
+                    <td style="text-align: right;">
+                        <div style="display: inline-flex; gap: 8px;">
+                            <a href="{{ url_for('edit_damage_issue', issue_id=issue.IssueId) }}" class="btn btn-secondary btn-sm" title="Edit ticket">
+                                <i class="fa-regular fa-pen-to-square"></i> Update
+                            </a>
+                            <a href="{{ url_for('delete_damage_issue', issue_id=issue.IssueId) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete ticket #{{ issue.IssueId }}?')" title="Delete ticket">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 50px; text-align: center; color: var(--text-muted);">
+        <i class="fa-solid fa-wrench" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+        No damage or repair logs found.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

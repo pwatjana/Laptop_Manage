@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}Record Allocation - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Record Boarding Action</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Log a laptop onboarding assignment or offboarding return event</p>
+    </div>
+    <a href="{{ url_for('list_allocations') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Logs
+    </a>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('add_allocation') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <!-- Honeypot Field -->
+        <div class="hp-field">
+            <label for="website_url">Do not fill this field:</label>
+            <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="type">Boarding Action Type *</label>
+                <select id="type" name="type" onchange="updateFormDefaults()">
+                    <option value="Onboarding" selected>Onboarding (Assign Laptop)</option>
+                    <option value="Offboarding">Offboarding (Return Laptop)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="sn">Select Laptop (S/N) *</label>
+                <select id="sn" name="sn" required>
+                    <option value="" disabled selected>-- Choose Laptop --</option>
+                    {% for laptop in laptops %}
+                        <option value="{{ laptop.Laptop_SN_no }}" data-status="{{ laptop.Status }}">
+                            {{ laptop.Laptop_SN_no }} - {{ laptop.Laptop_Brand }} ({{ laptop.Status }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="employee_code">Assign to Employee *</label>
+                <select id="employee_code" name="employee_code" required onchange="syncReceivedBy()">
+                    <option value="" disabled selected>-- Choose Employee --</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.Employee_code }}" data-name="{{ emp.Employee_full_name }}">
+                            {{ emp.Employee_code }} - {{ emp.Employee_full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="received_by">Recipient Name (Signee) *</label>
+                <input type="text" id="received_by" name="received_by" required placeholder="Employee signature name" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="handover_date">Handover / Return Date *</label>
+                <input type="date" id="handover_date" name="handover_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="condition">Laptop Condition *</label>
+                <select id="condition" name="condition" required>
+                    <option value="New">New / Sealed</option>
+                    <option value="Excellent" selected>Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Scratched">Scratched</option>
+                    <option value="Damaged">Damaged / Needs Check</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-save"></i> Commit Boarding Action
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Set default handover date to today
+    document.getElementById('handover_date').valueAsDate = new Date();
+
+    // Cache all options for filtering
+    const allOptions = Array.from(document.querySelectorAll('#sn option'));
+
+    function filterLaptops() {
+        const typeSelect = document.getElementById('type').value;
+        const laptopSelect = document.getElementById('sn');
+        const currentValue = laptopSelect.value;
+        
+        laptopSelect.innerHTML = '';
+        
+        const placeholder = allOptions.find(opt => opt.value === "");
+        if (placeholder) {
+            laptopSelect.appendChild(placeholder.cloneNode(true));
+        }
+        
+        allOptions.forEach(opt => {
+            if (opt.value === "") return;
+            
+            const status = opt.getAttribute('data-status');
+            if (typeSelect === "Onboarding") {
+                // For onboarding, show only Active or Available status laptops
+                if (status === "Active" || status === "Available") {
+                    laptopSelect.appendChild(opt.cloneNode(true));
+                }
+            } else if (typeSelect === "Offboarding") {
+                // For offboarding, show only Assigned status laptops
+                if (status === "Assigned") {
+                    laptopSelect.appendChild(opt.cloneNode(true));
+                }
+            }
+        });
+        
+        laptopSelect.value = currentValue;
+        if (laptopSelect.selectedIndex === -1) {
+            laptopSelect.selectedIndex = 0;
+        }
+    }
+
+    function syncReceivedBy() {
+        const empSelect = document.getElementById('employee_code');
+        const selectedOption = empSelect.options[empSelect.selectedIndex];
+        if (selectedOption) {
+            const empName = selectedOption.getAttribute('data-name');
+            document.getElementById('received_by').value = empName;
+        }
+    }
+
+    function updateFormDefaults() {
+        const typeSelect = document.getElementById('type').value;
+        const submitBtn = document.querySelector('.form-actions button[type="submit"]');
+        if (typeSelect === "Offboarding") {
+            submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Commit Offboarding (Return)';
+            submitBtn.style.background = 'linear-gradient(135deg, var(--warning), #d97706)';
+        } else {
+            submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Commit Onboarding (Assign)';
+            submitBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-hover))';
+        }
+        filterLaptops();
+    }
+
+    // Run initial filter on load
+    window.addEventListener('DOMContentLoaded', () => {
+        filterLaptops();
+    });
+</script>
+{% endblock %}

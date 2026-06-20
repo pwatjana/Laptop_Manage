@@ -1,57 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Laptop</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container form-container">
-        <h1>Edit Laptop: {{ laptop['SerialNumber'] }}</h1>
-        <form method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="hp-field"><input type="text" name="website_url"></div>
+{% extends "layout.html" %}
+
+{% block title %}Edit Laptop {{ laptop.Laptop_SN_no }} - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Edit Laptop ({{ laptop.Laptop_SN_no }})</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Modify properties and registration details of this hardware asset</p>
+    </div>
+    <a href="{{ url_for('list_laptops') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Pool
+    </a>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('edit_laptop', sn=laptop.Laptop_SN_no) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <!-- Honeypot Field -->
+        <div class="hp-field">
+            <label for="website_url">Do not fill this field:</label>
+            <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Serial Number (S/N)</label>
+                <input type="text" value="{{ laptop.Laptop_SN_no }}" disabled style="background: rgba(255,255,255,0.03); color: var(--text-muted); border-color: rgba(255,255,255,0.04);">
+            </div>
 
             <div class="form-group">
-                <label>Brand</label>
-                <input type="text" name="brand" value="{{ laptop['Brand'] }}">
+                <label for="no">No.</label>
+                <input type="number" id="no" name="no" value="{{ laptop.No or '' }}" min="1" autocomplete="off">
             </div>
+
             <div class="form-group">
-                <label>Model</label>
-                <input type="text" name="model" value="{{ laptop['Model'] }}">
+                <label for="asset_number">Asset Number</label>
+                <input type="text" id="asset_number" name="asset_number" value="{{ laptop.Asset_number or '' }}" autocomplete="off">
             </div>
+
             <div class="form-group">
-                <label>Chip</label>
-                <input type="text" name="chip" value="{{ laptop['Chip'] }}">
+                <label for="rfid">RFID</label>
+                <input type="text" id="rfid" name="rfid" value="{{ laptop.RFID or '' }}" autocomplete="off">
             </div>
+
             <div class="form-group">
-                <label>Status</label>
-                <select name="status">
-                    <option value="Available" {% if laptop['Status'] == 'Available' %}selected{% endif %}>Available</option>
-                    <option value="Assigned" {% if laptop['Status'] == 'Assigned' %}selected{% endif %}>Assigned</option>
-                    <option value="Repair" {% if laptop['Status'] == 'Repair' %}selected{% endif %}>Repair</option>
-                    <option value="Lost" {% if laptop['Status'] == 'Lost' %}selected{% endif %}>Lost</option>
+                <label for="brand">Brand *</label>
+                <input type="text" id="brand" name="brand" required value="{{ laptop.Laptop_Brand }}">
+            </div>
+
+            <div class="form-group">
+                <label for="purchase_date">Date of Purchase</label>
+                <input type="text" id="purchase_date" name="purchase_date" value="{{ laptop.Date_of_Purchase or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="eol_date">Date End of Life</label>
+                <input type="text" id="eol_date" name="eol_date" value="{{ laptop.Date_end_of_life or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="warranty_type">Warranty Type</label>
+                <input type="text" id="warranty_type" name="warranty_type" value="{{ laptop.Warranty_type or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="warranty_period">Warranty Period / Expiration</label>
+                <input type="text" id="warranty_period" name="warranty_period" value="{{ laptop.Warranty_period or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="status">Current Status</label>
+                <select id="status" name="status">
+                    <option value="Active" {% if laptop.Status == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Available" {% if laptop.Status == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Assigned" {% if laptop.Status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                    <option value="In Repair" {% if laptop.Status == 'In Repair' %}selected{% endif %}>In Repair</option>
+                    <option value="EOL" {% if laptop.Status == 'EOL' %}selected{% endif %}>EOL</option>
+                    <option value="Warranty Expired" {% if laptop.Status == 'Warranty Expired' %}selected{% endif %}>Warranty Expired</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Warranty</label>
-                <input type="text" name="warranty" value="{{ laptop['Warranty'] }}">
-            </div>
-            <div class="form-group">
-                <label>Cost (THB)</label>
-                <input type="number" name="cost" value="{{ laptop['Cost'] }}">
-            </div>
-            <div class="form-group">
-                <label>Screen Size</label>
-                <input type="number" step="0.1" name="screen" value="{{ laptop['ScreenSize'] }}">
-            </div>
-            <div class="form-group">
-                <label>RAM/ROM</label>
-                <input type="text" name="ramrom" value="{{ laptop['RamRom'] }}">
-            </div>
-            <button type="submit" class="btn primary">Update Laptop</button>
-            <a href="{{ url_for('index') }}" class="btn secondary">Cancel</a>
-        </form>
-    </div>
-</body>
-</html>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('list_laptops') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-save"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

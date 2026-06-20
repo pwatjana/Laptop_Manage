@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}Update Ticket #{{ issue.IssueId }} - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Update Damage Ticket (#{{ issue.IssueId }})</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Modify repair progress, costs, and resolution notes for this incident</p>
+    </div>
+    <a href="{{ url_for('list_damage_issues') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Tickets
+    </a>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('edit_damage_issue', issue_id=issue.IssueId) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <!-- Honeypot Field -->
+        <div class="hp-field">
+            <label for="website_url">Do not fill this field:</label>
+            <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Laptop S/N</label>
+                <input type="text" value="{{ issue.SerialNumber }}" disabled style="background: rgba(255,255,255,0.03); color: var(--text-muted); border-color: rgba(255,255,255,0.04);">
+            </div>
+
+            <div class="form-group">
+                <label>Reported Date</label>
+                <input type="text" value="{{ issue.ReportedDate }}" disabled style="background: rgba(255,255,255,0.03); color: var(--text-muted); border-color: rgba(255,255,255,0.04);">
+            </div>
+
+            <div class="form-group">
+                <label for="severity">Severity Level *</label>
+                <select id="severity" name="severity" required>
+                    <option value="Low" {% if issue.Severity == 'Low' %}selected{% endif %}>Low (Scratches, minor wear)</option>
+                    <option value="Medium" {% if issue.Severity == 'Medium' %}selected{% endif %}>Medium (Key replacement, battery issues)</option>
+                    <option value="High" {% if issue.Severity == 'High' %}selected{% endif %}>High (Cracked screen, keyboard non-responsive)</option>
+                    <option value="Critical" {% if issue.Severity == 'Critical' %}selected{% endif %}>Critical (Motherboard dead, liquid spill)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Ticket Status *</label>
+                <select id="status" name="status" required onchange="handleStatusChange()">
+                    <option value="Open" {% if issue.Status == 'Open' %}selected{% endif %}>Open (Pending Diagnostic)</option>
+                    <option value="In Repair" {% if issue.Status == 'In Repair' %}selected{% endif %}>In Repair (Sent to Center)</option>
+                    <option value="Resolved" {% if issue.Status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="Scrapped" {% if issue.Status == 'Scrapped' %}selected{% endif %}>Scrapped / Written Off</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cost">Estimated/Actual Repair Cost (THB)</label>
+                <input type="number" id="cost" name="cost" step="0.01" value="{{ issue.Cost or 0.0 }}" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="resolution_date">Resolution Date</label>
+                <input type="date" id="resolution_date" name="resolution_date" value="{{ issue.ResolutionDate or '' }}">
+            </div>
+
+            <div class="form-group full-width">
+                <label for="description">Damage Description *</label>
+                <textarea id="description" name="description" required>{{ issue.Description }}</textarea>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="action_taken">Actions Taken (Resolution Notes)</label>
+                <input type="text" id="action_taken" name="action_taken" value="{{ issue.ActionTaken or '' }}" placeholder="e.g. Screen replaced under warranty, motherboard cleaned..." autocomplete="off">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('list_damage_issues') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-save"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function handleStatusChange() {
+        const status = document.getElementById('status').value;
+        const resDateInput = document.getElementById('resolution_date');
+        if (status === "Resolved" && !resDateInput.value) {
+            resDateInput.valueAsDate = new Date();
+        } else if (status !== "Resolved") {
+            resDateInput.value = "";
+        }
+    }
+</script>
+{% endblock %}

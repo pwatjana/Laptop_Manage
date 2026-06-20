@@ -1,40 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Employee Directory</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <a href="{{ url_for('index') }}" class="btn secondary">← Back to Dashboard</a>
-            <h1>👥 Employee Directory</h1>
-            <a href="{{ url_for('add_employee') }}" class="btn primary">Add New Employee</a>
-        </header>
+{% extends "layout.html" %}
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Code</th><th>Full Name</th><th>Section</th><th>Join Date</th><th>Remark</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for emp in employees %}
-                <tr>
-                    <td>{{ emp['EmployeeCode'] }}</td>
-                    <td>{{ emp['FullName'] }}</td>
-                    <td>{{ emp['SectionName'] }} ({{ emp['SectionCode'] }})</td>
-                    <td>{{ emp['JoinDate'] }}</td>
-                    <td>{{ emp['Remark'] }}</td>
-                    <td>
-                        <a href="{{ url_for('edit_employee', code=emp['EmployeeCode']) }}" class="btn edit">Edit</a>
-                        <a href="{{ url_for('delete_employee', code=emp['EmployeeCode']) }}" class="btn delete" onclick="return confirm('Delete?')">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+{% block title %}Employees Directory - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Employees Directory</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Manage corporate personnel records and details</p>
     </div>
-</body>
-</html>
+    {% if current_user %}
+        <a href="{{ url_for('add_employee') }}" class="btn btn-primary">
+            <i class="fa-solid fa-user-plus"></i> Add Employee
+        </a>
+    {% endif %}
+</div>
+
+<!-- Search and Filter Form -->
+<div class="form-container" style="margin-bottom: 25px; padding: 20px; background: rgba(30,41,59,0.5); border: 1px solid var(--border-color);">
+    <form method="GET" action="{{ url_for('list_employees') }}">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div class="form-group">
+                <label for="code" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Employee Code</label>
+                <input type="text" id="code" name="code" value="{{ search_code or '' }}" placeholder="Filter by code..." autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label for="name" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Full Name</label>
+                <input type="text" id="name" name="name" value="{{ search_name or '' }}" placeholder="Filter by name..." autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label for="section" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Section</label>
+                <input type="text" id="section" name="section" value="{{ search_section or '' }}" placeholder="Type to search section..." list="sections_list" autocomplete="off">
+                <datalist id="sections_list">
+                    {% for sect in unique_sections %}
+                        <option value="{{ sect }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <div class="form-group">
+                <label for="join_date" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Join Date</label>
+                <input type="text" id="join_date" name="join_date" value="{{ search_join_date or '' }}" placeholder="Type to search join date..." list="join_dates_list" autocomplete="off">
+                <datalist id="join_dates_list">
+                    {% for jd in unique_join_dates %}
+                        <option value="{{ jd }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <div class="form-group">
+                <label for="resign_date" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Resign Date</label>
+                <input type="text" id="resign_date" name="resign_date" value="{{ search_resign_date or '' }}" placeholder="Type to search resign date..." list="resign_dates_list" autocomplete="off">
+                <datalist id="resign_dates_list">
+                    {% for rd in unique_resign_dates %}
+                        <option value="{{ rd }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <div class="form-group">
+                <label for="status" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Status</label>
+                <select id="status" name="status">
+                    <option value="" {% if not search_status %}selected{% endif %}>All Statuses</option>
+                    <option value="Active" {% if search_status == 'Active' %}selected{% endif %}>Active Duty</option>
+                    <option value="Offboarded" {% if search_status == 'Offboarded' %}selected{% endif %}>Offboarded</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; width: 100%;">
+            <div style="display: inline-flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Filter Directory
+                </button>
+                <a href="{{ url_for('list_employees') }}" class="btn btn-secondary" style="padding: 8px 16px;">
+                    <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                </a>
+            </div>
+            
+            {% if employees %}
+                <a href="{{ url_for('export_employees', code=search_code, name=search_name, section=search_section, join_date=search_join_date, resign_date=search_resign_date, status=search_status) }}" class="btn btn-secondary" style="padding: 8px 16px; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #34d399;">
+                    <i class="fa-solid fa-file-csv"></i> Download CSV
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="table-wrapper">
+    {% if employees %}
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Full Name</th>
+                <th>Section</th>
+                <th>Joined Date</th>
+                <th>Status / Resign Date</th>
+                {% if current_user %}
+                    <th style="text-align: right;">Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td><strong>{{ emp.Employee_code }}</strong></td>
+                <td>
+                    <div style="font-weight: 600;">{{ emp.Employee_full_name }}</div>
+                </td>
+                <td>
+                    <div>{{ emp.Section or 'N/A' }}</div>
+                </td>
+                <td>{{ emp.Join_date or 'N/A' }}</td>
+                <td>
+                    {% if emp.Resign_Date and emp.Resign_Date != '12/31/2069' %}
+                        <span class="badge scrapped">Offboarded</span>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">{{ emp.Resign_Date }}</div>
+                    {% else %}
+                        <span class="badge available">Active Duty</span>
+                    {% endif %}
+                </td>
+                {% if current_user %}
+                    <td style="text-align: right;">
+                        <div style="display: inline-flex; gap: 8px;">
+                            <a href="{{ url_for('edit_employee', code=emp.Employee_code) }}" class="btn btn-secondary btn-sm" title="Edit employee">
+                                <i class="fa-regular fa-pen-to-square"></i> Edit
+                            </a>
+                            <a href="{{ url_for('delete_employee', code=emp.Employee_code) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete employee {{ emp.Employee_code }} ({{ emp.Employee_full_name }})? This action cannot be undone.')" title="Delete record">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 50px; text-align: center; color: var(--text-muted);">
+        <i class="fa-solid fa-users" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+        No employees found matching the filter criteria.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}On/Offboarding Log - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Onboarding & Offboarding Logs</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Track laptop handovers, returns, and employee boarding transactions</p>
+    </div>
+    {% if current_user %}
+        <a href="{{ url_for('add_allocation') }}" class="btn btn-primary">
+            <i class="fa-solid fa-people-arrows"></i> Record Boarding Action
+        </a>
+    {% endif %}
+</div>
+
+<div class="table-wrapper">
+    {% if allocations %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Handover Date</th>
+                <th>Type</th>
+                <th>Laptop S/N</th>
+                <th>Employee Code</th>
+                <th>Assigned User</th>
+                <th>Condition</th>
+                <th>Handler</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alloc in allocations %}
+            <tr>
+                <td><code style="color: var(--text-muted);">#{{ alloc.AllocationId }}</code></td>
+                <td><strong>{{ alloc.HandoverDate }}</strong></td>
+                <td>
+                    <span class="badge {{ alloc.AllocationType|lower }}">
+                        {{ alloc.AllocationType }}
+                    </span>
+                </td>
+                <td>
+                    <strong>{{ alloc.SerialNumber }}</strong>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary)">{{ alloc.Laptop_Brand }}</div>
+                </td>
+                <td><code>{{ alloc.EmployeeCode }}</code></td>
+                <td>
+                    <div style="font-weight: 600;">{{ alloc.Employee_full_name or alloc.ReceivedBy }}</div>
+                </td>
+                <td>{{ alloc.Condition or 'Good' }}</td>
+                <td><span style="color: #a5b4fc; font-weight: 500;">{{ alloc.HandoverBy }}</span></td>
+                <td>
+                    {% if alloc.Status == 'Active' %}
+                        <span class="badge assigned">Active Assignment</span>
+                    {% else %}
+                        <span class="badge available">Returned</span>
+                        {% if alloc.ReturnDate %}
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">On: {{ alloc.ReturnDate }}</div>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 50px; text-align: center; color: var(--text-muted);">
+        <i class="fa-solid fa-people-arrows" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+        No onboarding or offboarding allocations found.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

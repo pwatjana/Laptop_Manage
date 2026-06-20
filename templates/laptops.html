@@ -1,44 +1,167 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Laptops Inventory</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <a href="{{ url_for('index') }}" class="btn secondary">← Back to Dashboard</a>
-            <h1>💻 Laptop Inventory</h1>
-            <a href="{{ url_for('add_laptop') }}" class="btn primary">Add New Laptop</a>
-        </header>
+{% extends "layout.html" %}
 
+{% block title %}Laptop Inventory - IT Resource Manager{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Laptop Pool</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">Manage corporate hardware assets and statuses</p>
+    </div>
+    {% if current_user %}
+        <a href="{{ url_for('add_laptop') }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add New Laptop
+        </a>
+    {% endif %}
+</div>
+
+<!-- Search and Filter Form -->
+<div class="form-container" style="margin-bottom: 25px; padding: 20px; background: rgba(30,41,59,0.5); border: 1px solid var(--border-color);">
+    <form method="GET" action="{{ url_for('list_laptops') }}">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div class="form-group">
+                <label for="name" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Employee Name</label>
+                <input type="text" id="name" name="name" value="{{ search_name or '' }}" placeholder="Type to search user..." list="employee_names_list" autocomplete="off">
+                <datalist id="employee_names_list">
+                    {% for name in unique_names %}
+                        <option value="{{ name }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <div class="form-group">
+                <label for="section" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Section / Department</label>
+                <input type="text" id="section" name="section" value="{{ search_section or '' }}" placeholder="Type to search section..." list="sections_list" autocomplete="off">
+                <datalist id="sections_list">
+                    {% for sect in unique_sections %}
+                        <option value="{{ sect }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <div class="form-group">
+                <label for="brand" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Laptop Brand</label>
+                <input type="text" id="brand" name="brand" value="{{ search_brand or '' }}" placeholder="Type to search brand..." list="brands_list" autocomplete="off">
+                <datalist id="brands_list">
+                    {% for br in unique_brands %}
+                        <option value="{{ br }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <!-- Status Multi-Select Checkboxes -->
+            <div class="form-group full-width" style="grid-column: 1 / -1; margin-top: 5px;">
+                <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 8px; font-weight: 500;">Filter by Status (Multiple Select)</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.02); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    {% for stat in ["Active", "Available", "Assigned", "In Repair", "EOL", "Warranty Expired"] %}
+                        <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;">
+                            <input type="checkbox" name="status" value="{{ stat }}" {% if stat in selected_statuses %}checked{% endif %} style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--primary);">
+                            <span>{{ stat }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center;">
+            <div style="display: inline-flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Filter Laptops
+                </button>
+                <a href="{{ url_for('list_laptops', all='true') }}" class="btn btn-secondary" style="padding: 8px 16px; background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3); color: #a5b4fc;">
+                    <i class="fa-solid fa-list"></i> Show All Laptops
+                </a>
+                <a href="{{ url_for('list_laptops') }}" class="btn btn-secondary" style="padding: 8px 16px;">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </a>
+            </div>
+            
+            {% if has_searched and laptops %}
+                {% set status_query = "" %}
+                {% for s in selected_statuses %}
+                    {% set status_query = status_query ~ "&status=" ~ s %}
+                {% endfor %}
+                <a href="{{ url_for('export_laptops', name=search_name, section=search_section, brand=search_brand, all=show_all) }}{{ status_query }}" class="btn btn-secondary" style="padding: 8px 16px; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #34d399;">
+                    <i class="fa-solid fa-file-csv"></i> Download CSV
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="table-wrapper">
+    {% if has_searched %}
+        {% if laptops %}
         <table>
             <thead>
                 <tr>
-                    <th>S/N</th><th>Brand</th><th>Model</th><th>Status</th><th>Chip</th><th>Warranty</th><th>Cost</th><th>Screen</th><th>RAM/ROM</th><th>Actions</th>
+                    <th>No.</th>
+                    <th>S/N (SN No.)</th>
+                    <th>Asset Number</th>
+                    <th>Brand</th>
+                    <th>Assigned User</th>
+                    <th>Section</th>
+                    <th>Purchase Date</th>
+                    <th>Warranty Period</th>
+                    <th>Status</th>
+                    {% if current_user %}
+                        <th style="text-align: right;">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for laptop in laptops %}
                 <tr>
-                    <td>{{ laptop['SerialNumber'] }}</td>
-                    <td>{{ laptop['Brand'] }}</td>
-                    <td>{{ laptop['Model'] }}</td>
-                    <td><span class="badge {{ laptop['Status']|lower }}">{{ laptop['Status'] or 'N/A' }}</span></td>
-                    <td>{{ laptop['Chip'] }}</td>
-                    <td>{{ laptop['Warranty'] }}</td>
-                    <td>{{ "{:,.0f}".format(laptop['Cost']) }}</td>
-                    <td>{{ laptop['ScreenSize'] }}"</td>
-                    <td>{{ laptop['RamRom'] }}</td>
+                    <td><code style="color: var(--text-muted);">#{{ laptop.No or '-' }}</code></td>
+                    <td><strong>{{ laptop.Laptop_SN_no }}</strong></td>
+                    <td>{{ laptop.Asset_number or '-' }}</td>
+                    <td><div style="font-weight: 600;">{{ laptop.Laptop_Brand }}</div></td>
                     <td>
-                        <a href="{{ url_for('edit_laptop', sn=laptop['SerialNumber']) }}" class="btn edit">Edit</a>
-                        <a href="{{ url_for('delete_laptop', sn=laptop['SerialNumber']) }}" class="btn delete" onclick="return confirm('Delete?')">Delete</a>
+                        {% if laptop.Employee_name %}
+                            <strong>{{ laptop.Employee_name }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-secondary);">Code: {{ laptop.Employee_code }}</div>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">In Stock</span>
+                        {% endif %}
                     </td>
+                    <td>{{ laptop.Section or '-' }}</td>
+                    <td>{{ laptop.Date_of_Purchase or '-' }}</td>
+                    <td>{{ laptop.Warranty_period or '-' }}</td>
+                    <td>
+                        <span class="badge {{ laptop.Status|lower|replace(' ', '_') }}">
+                            {{ laptop.Status }}
+                        </span>
+                    </td>
+                    {% if current_user %}
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px;">
+                                <a href="{{ url_for('edit_laptop', sn=laptop.Laptop_SN_no) }}" class="btn btn-secondary btn-sm" title="Edit details">
+                                    <i class="fa-regular fa-pen-to-square"></i> Edit
+                                </a>
+                                <a href="{{ url_for('delete_laptop', sn=laptop.Laptop_SN_no) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete laptop {{ laptop.Laptop_SN_no }} from inventory?')" title="Delete from system">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </div>
+                        </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <div style="padding: 50px; text-align: center; color: var(--text-muted);">
+            <i class="fa-solid fa-magnifying-glass-chart" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+            No laptops found matching the filter criteria.
+        </div>
+        {% endif %}
+    {% else %}
+    <div style="padding: 70px 50px; text-align: center; color: var(--text-muted);">
+        <i class="fa-solid fa-laptop" style="font-size: 4rem; margin-bottom: 20px; display: block; color: var(--primary); opacity: 0.5;"></i>
+        <h3 style="font-weight: 500; color: var(--text-main); margin-bottom: 8px;">Laptop Pool Search</h3>
+        <p style="font-size: 0.9rem; max-width: 500px; margin: 0 auto; line-height: 1.5;">
+            Use the filters above to search by Employee Name, Section, or Brand, or click "Show All Laptops" to view the entire inventory.
+        </p>
     </div>
-</body>
-</html>
+    {% endif %}
+</div>
+{% endblock %}
